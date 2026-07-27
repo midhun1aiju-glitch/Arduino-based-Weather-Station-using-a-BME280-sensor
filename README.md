@@ -1,2 +1,2 @@
-# NFC-Lock-System
-Developed an NFC-based smart door lock using Arduino Uno and the RC522 RFID module for secure access control. The system authenticates authorized RFID cards to activate a relay-controlled lock and uses LED indicators to display access status, providing a simple and reliable security solution.
+# Arduino Weather Station project using an Arduino Uno, BME280 sensor, and LCD display
+Developed a low-cost Arduino-based Weather Station using a BME280 sensor and LCD display to monitor temperature, humidity, and atmospheric pressure in real time. The system communicates through the I2C protocol, providing accurate environmental data while demonstrating sensor interfacing, embedded programming, and real-time monitoring.
