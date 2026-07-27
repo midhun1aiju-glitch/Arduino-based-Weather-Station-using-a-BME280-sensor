@@ -1,73 +1,63 @@
-#include <SPI.h>
-#include <MFRC522.h>
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+#include <LiquidCrystal_I2C.h>
 
-#define SS_PIN 10
-#define RST_PIN 9
+#define SEALEVELPRESSURE_HPA 1013.25
 
-#define RELAY_PIN 7
-#define GREEN_LED 6
-#define RED_LED 5
-
-MFRC522 rfid(SS_PIN, RST_PIN);
-
-// Replace with your card UID
-byte authorizedUID[4] = {0xDE, 0xAD, 0xBE, 0xEF};
+Adafruit_BME280 bme;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 void setup() {
+
   Serial.begin(9600);
 
-  SPI.begin();
-  rfid.PCD_Init();
+  lcd.init();
+  lcd.backlight();
 
-  pinMode(RELAY_PIN, OUTPUT);
-  pinMode(GREEN_LED, OUTPUT);
-  pinMode(RED_LED, OUTPUT);
+  if (!bme.begin(0x76)) {
+    lcd.print("BME280 Error");
+    while (1);
+  }
 
-  digitalWrite(RELAY_PIN, LOW);
-  digitalWrite(GREEN_LED, LOW);
-  digitalWrite(RED_LED, LOW);
-
-  Serial.println("Scan your RFID Card...");
+  lcd.print("Weather Station");
+  delay(2000);
+  lcd.clear();
 }
 
 void loop() {
 
-  if (!rfid.PICC_IsNewCardPresent())
-    return;
+  float temperature = bme.readTemperature();
+  float humidity = bme.readHumidity();
+  float pressure = bme.readPressure() / 100.0F;
 
-  if (!rfid.PICC_ReadCardSerial())
-    return;
+  lcd.setCursor(0, 0);
+  lcd.print("T:");
+  lcd.print(temperature, 1);
+  lcd.print((char)223);
+  lcd.print("C");
 
-  bool access = true;
+  lcd.setCursor(10, 0);
+  lcd.print("H:");
+  lcd.print(humidity, 0);
+  lcd.print("%");
 
-  for (byte i = 0; i < 4; i++) {
-    if (rfid.uid.uidByte[i] != authorizedUID[i]) {
-      access = false;
-      break;
-    }
-  }
+  lcd.setCursor(0, 1);
+  lcd.print("P:");
+  lcd.print(pressure, 0);
+  lcd.print("hPa");
 
-  if (access) {
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println(" C");
 
-    Serial.println("Access Granted");
+  Serial.print("Humidity: ");
+  Serial.print(humidity);
+  Serial.println(" %");
 
-    digitalWrite(GREEN_LED, HIGH);
-    digitalWrite(RELAY_PIN, HIGH);
+  Serial.print("Pressure: ");
+  Serial.print(pressure);
+  Serial.println(" hPa");
 
-    delay(5000);
-
-    digitalWrite(GREEN_LED, LOW);
-    digitalWrite(RELAY_PIN, LOW);
-
-  } else {
-
-    Serial.println("Access Denied");
-
-    digitalWrite(RED_LED, HIGH);
-    delay(2000);
-    digitalWrite(RED_LED, LOW);
-  }
-
-  rfid.PICC_HaltA();
-  rfid.PCD_StopCrypto1();
+  delay(2000);
 }
